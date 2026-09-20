@@ -1,0 +1,13 @@
+# Binários compilados
+grtv-recorder/grtv-recorder
+grtv-recorder/grtv-recorder.exe
+grtv-recorder/*.exe
+
+# Dados de execução local (nunca devem ir para o repo)
+grtv-recorder/work/
+grtv-recorder/arquivos/
+grtv-recorder/logs/
+
+# Go
+*.test
+*.out

@@ -1,0 +1,65 @@
+# Caminhos
+ffmpeg_path:  "C:\\Sistema\\bin\\ffmpeg.exe"
+ffprobe_path: "C:\\Sistema\\bin\\ffprobe.exe"
+work_dir:     "G:\\Sistema\\ftp\\work"
+output_dir:   "G:\\Sistema\\ftp\\arquivos\\stream"
+log_dir:      "G:\\Sistema\\ftp\\logs"
+
+# Segmentação
+segment_seconds: 240          # 4 minutos; deve dividir 3600
+grid_snap_seconds: 3          # tolerância de encosto na grade (SPEC.md §7.3)
+
+# Watchdog
+stall_timeout_seconds: 300    # sem .ts novo por este tempo = travado
+backoff_initial_seconds: 2
+backoff_max_seconds: 60
+orphan_timeout_seconds: 300   # mtime parado = .ts órfão publicável
+
+# Publisher
+publish_tick_seconds: 5
+max_publish_retries: 3
+
+# Comportamento
+pre_create_day_folders: true  # cria pastas do dia às 00:00:05
+log_level: "info"             # debug | info | warn | error
+
+channels:
+  - name: "Record"
+    label: "TV IMPERIAL - AF. TV RECORD - RR"
+    url: "http://192.168.129.228/0.m3u8"
+    enabled: true
+
+  - name: "Globo"
+    label: "TV RORAIMA - AF. GLOBO - RR"
+    url: "http://192.168.129.228/2.m3u8"
+    enabled: true
+
+  - name: "TvAssembleia"
+    label: "TV ASSEMBLEIA - RR"
+    url: "http://192.168.129.228/4.m3u8"
+    enabled: true
+
+  - name: "Band"
+    label: "TV BAND RORAIMA - RR"
+    url: "http://192.168.129.228/6.m3u8"
+    enabled: true
+
+  - name: "Sbt"
+    label: "TV NORTE / AF. SBT - RR"
+    url: "http://192.168.129.228/14.m3u8"
+    enabled: true
+
+  - name: "TvCidade"
+    label: "TV CIDADE - RR"
+    url: "http://192.168.129.228/12.m3u8"
+    enabled: true
+
+  - name: "Cultura"
+    label: "TV ATIVA RORAIMA"
+    url: "http://192.168.129.228/10.m3u8"
+    enabled: true
+
+  - name: "TvTropical"
+    label: "TV TROPICAL RR"
+    url: "http://192.168.129.228/8.m3u8"
+    enabled: true
