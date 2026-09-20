@@ -54,25 +54,32 @@ func (l Level) String() string {
 // Logger escreve em logs\recorder.log, rotativo (SPEC.md §11: 50MB, 10 arquivos, compressão).
 // Formato de linha: 2026-09-18T00:04:03-04:00  INFO  [Globo]  mensagem  campo=valor
 type Logger struct {
-	out   io.WriteCloser
+	file  *lumberjack.Logger
+	out   io.Writer
 	level Level
 	mu    sync.Mutex
 }
 
-// New abre/rotaciona logs\recorder.log dentro de logDir.
-func New(logDir string, level Level) *Logger {
-	return &Logger{
-		out: &lumberjack.Logger{
-			Filename:   filepath.Join(logDir, "recorder.log"),
-			MaxSize:    50, // MB
-			MaxBackups: 10,
-			Compress:   true,
-		},
-		level: level,
+// New abre/rotaciona logs\recorder.log dentro de logDir. Writers extras em mirrors
+// (ex.: os.Stdout, usado no modo console) recebem uma cópia de cada linha — útil para
+// acompanhar o serviço rodando em foreground durante testes manuais.
+func New(logDir string, level Level, mirrors ...io.Writer) *Logger {
+	file := &lumberjack.Logger{
+		Filename:   filepath.Join(logDir, "recorder.log"),
+		MaxSize:    50, // MB
+		MaxBackups: 10,
+		Compress:   true,
 	}
+
+	var out io.Writer = file
+	if len(mirrors) > 0 {
+		out = io.MultiWriter(append([]io.Writer{file}, mirrors...)...)
+	}
+
+	return &Logger{file: file, out: out, level: level}
 }
 
-func (l *Logger) Close() error { return l.out.Close() }
+func (l *Logger) Close() error { return l.file.Close() }
 
 func (l *Logger) Debug(channel, msg string, kv ...any) { l.log(LevelDebug, channel, msg, kv...) }
 func (l *Logger) Info(channel, msg string, kv ...any)  { l.log(LevelInfo, channel, msg, kv...) }

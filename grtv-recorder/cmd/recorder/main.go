@@ -130,17 +130,23 @@ func runStatus(configPath string) {
 func runRecorder(configPath string) {
 	cfg := loadConfig(configPath)
 
-	level := logging.ParseLevel(cfg.LogLevel)
-	logger := logging.New(cfg.LogDir, level)
-	defer logger.Close()
-	gaps := logging.NewGapsLogger(cfg.LogDir)
-	defer gaps.Close()
-
 	isService, err := service.IsWindowsService()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "erro ao detectar modo serviço:", err)
 		os.Exit(1)
 	}
+
+	level := logging.ParseLevel(cfg.LogLevel)
+	var logger *logging.Logger
+	if isService {
+		logger = logging.New(cfg.LogDir, level)
+	} else {
+		// Modo console: espelha cada linha no terminal para acompanhar em tempo real.
+		logger = logging.New(cfg.LogDir, level, os.Stdout)
+	}
+	defer logger.Close()
+	gaps := logging.NewGapsLogger(cfg.LogDir)
+	defer gaps.Close()
 
 	if isService {
 		if err := service.RunService(cfg, logger, gaps); err != nil {
