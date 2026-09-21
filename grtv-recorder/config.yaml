@@ -26,40 +26,40 @@ log_level: "info"             # debug | info | warn | error
 channels:
   - name: "Record"
     label: "TV IMPERIAL - AF. TV RECORD - RR"
-    url: "http://192.168.129.228/0.m3u8"
+    url: "rtsp://192.168.1.168/0"
     enabled: true
 
   - name: "Globo"
     label: "TV RORAIMA - AF. GLOBO - RR"
-    url: "http://192.168.129.228/2.m3u8"
+    url: "rtsp://192.168.1.168/2"
     enabled: true
 
   - name: "TvAssembleia"
     label: "TV ASSEMBLEIA - RR"
-    url: "http://192.168.129.228/4.m3u8"
+    url: "rtsp://192.168.1.168/4"
     enabled: true
 
   - name: "Band"
     label: "TV BAND RORAIMA - RR"
-    url: "http://192.168.129.228/6.m3u8"
+    url: "rtsp://192.168.1.168/6"
     enabled: true
 
   - name: "Sbt"
     label: "TV NORTE / AF. SBT - RR"
-    url: "http://192.168.129.228/14.m3u8"
+    url: "rtsp://192.168.1.168/14"
     enabled: true
 
   - name: "TvCidade"
     label: "TV CIDADE - RR"
-    url: "http://192.168.129.228/12.m3u8"
+    url: "rtsp://192.168.1.168/12"
     enabled: true
 
   - name: "Cultura"
     label: "TV ATIVA RORAIMA"
-    url: "http://192.168.129.228/10.m3u8"
+    url: "rtsp://192.168.1.168/10"
     enabled: true
 
   - name: "TvTropical"
     label: "TV TROPICAL RR"
-    url: "http://192.168.129.228/8.m3u8"
+    url: "rtsp://192.168.1.168/8"
     enabled: true
