@@ -123,12 +123,13 @@ func (w *Worker) Run(ctx context.Context) {
 			w.setState(StateBackoff, err.Error())
 		} else {
 			w.setState(StateRunning, "")
-			ran = w.superviseOne(ctx, cmd, stdin, startedAt)
+			var reason string
+			ran, reason = w.superviseOne(ctx, cmd, stdin, startedAt)
 			if ctx.Err() != nil {
 				w.setState(StateStopped, "")
 				return
 			}
-			w.setState(StateBackoff, "")
+			w.setState(StateBackoff, reason)
 		}
 
 		if ran >= stableRunThreshold {
@@ -147,8 +148,9 @@ func (w *Worker) Run(ctx context.Context) {
 
 // superviseOne acompanha um processo ffmpeg já iniciado até ele sair — por término
 // natural, por stall detectado pelo watchdog, ou por cancelamento do contexto (shutdown
-// do serviço) — e retorna por quanto tempo ele rodou.
-func (w *Worker) superviseOne(ctx context.Context, cmd *exec.Cmd, stdin io.WriteCloser, startedAt time.Time) time.Duration {
+// do serviço) — e retorna por quanto tempo ele rodou e o motivo (para logs\gaps.log e
+// para status.json — sem isso, diagnosticar exigia abrir o log de stderr do ffmpeg).
+func (w *Worker) superviseOne(ctx context.Context, cmd *exec.Cmd, stdin io.WriteCloser, startedAt time.Time) (time.Duration, string) {
 	exitCh := make(chan error, 1)
 	go func() { exitCh <- cmd.Wait() }()
 
@@ -160,7 +162,7 @@ func (w *Worker) superviseOne(ctx context.Context, cmd *exec.Cmd, stdin io.Write
 	select {
 	case <-ctx.Done():
 		w.gracefulStop(cmd, stdin, exitCh)
-		return time.Since(startedAt)
+		return time.Since(startedAt), ""
 
 	case <-stallCh:
 		w.logger.Warn(w.ch.Name, "sem novo .ts recente, stream travado — reiniciando", "stall_timeout_s", w.cfg.StallTimeoutSeconds)
@@ -168,13 +170,14 @@ func (w *Worker) superviseOne(ctx context.Context, cmd *exec.Cmd, stdin io.Write
 		<-exitCh
 		end := time.Now()
 		w.gaps.Record(w.ch.Name, startedAt, end, "stall")
-		return end.Sub(startedAt)
+		return end.Sub(startedAt), "stall (sem novo .ts por mais de " + fmt.Sprint(w.cfg.StallTimeoutSeconds) + "s)"
 
 	case err := <-exitCh:
 		end := time.Now()
+		reason := fmt.Sprintf("process_exit code=%d", exitCodeOf(err))
 		w.logger.Warn(w.ch.Name, "processo ffmpeg terminou", "code", exitCodeOf(err), "ran_s", int(end.Sub(startedAt).Seconds()))
-		w.gaps.Record(w.ch.Name, startedAt, end, fmt.Sprintf("process_exit code=%d", exitCodeOf(err)))
-		return end.Sub(startedAt)
+		w.gaps.Record(w.ch.Name, startedAt, end, reason)
+		return end.Sub(startedAt), reason
 	}
 }
 

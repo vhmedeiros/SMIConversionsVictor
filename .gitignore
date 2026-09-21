@@ -11,3 +11,6 @@ grtv-recorder/logs/
 # Go
 *.test
 *.out
+
+# Coletas de log trazidas de máquinas de teste (ex.: Logs_do_pc_BOV02/)
+Logs_do_pc_*/
