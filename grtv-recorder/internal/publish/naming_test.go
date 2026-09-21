@@ -47,6 +47,27 @@ func TestComputeEnd_MidnightRollover(t *testing.T) {
 	}
 }
 
+func TestSnapToGrid_SnapsSmallJitter(t *testing.T) {
+	// Jitter de GOP do RTSP: início real 1s depois da grade (SPEC.md §5.4) — visto em
+	// campo (BOV02): "07.36.01" quando o arquivo anterior já tinha fechado em "07.36.00".
+	raw := time.Date(2026, 9, 21, 7, 36, 1, 0, time.Local)
+	got := SnapToGrid(raw, 240, 3)
+	want := time.Date(2026, 9, 21, 7, 36, 0, 0, time.Local)
+	if !got.Equal(want) {
+		t.Fatalf("got %v, want %v", got, want)
+	}
+}
+
+func TestSnapToGrid_KeepsRealGap(t *testing.T) {
+	// Interrupção real de ~73s (visto em campo) não pode ser mascarada como se fosse
+	// jitter — o nome deve continuar irregular (SPEC.md §7.3).
+	raw := time.Date(2026, 9, 21, 5, 37, 13, 0, time.Local)
+	got := SnapToGrid(raw, 240, 3)
+	if !got.Equal(raw) {
+		t.Fatalf("esperava que um gap real (73s) não fosse encostado na grade, got %v", got)
+	}
+}
+
 func TestFormatRange(t *testing.T) {
 	start := time.Date(2026, 9, 18, 23, 56, 0, 0, time.Local)
 	end := time.Date(2026, 9, 19, 0, 0, 0, 0, time.Local)

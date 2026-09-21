@@ -35,19 +35,29 @@ func nearestGridBoundary(t time.Time, segmentSeconds int) time.Time {
 	return midnight.Add(time.Duration(nearest) * time.Second)
 }
 
+// SnapToGrid encosta t na borda da grade mais próxima se a diferença estiver dentro de
+// gridSnapSeconds (SPEC.md §7.3). Usado tanto no fim quanto no início do bloco — sem
+// isso, o fim de um arquivo encostava na grade mas o início do próximo (lido cru do
+// nome do .ts, com o jitter de ±1 GOP do RTSP — SPEC.md §5.4) não, abrindo um "buraco"
+// cosmético de 1-2s entre nomes de arquivos consecutivos que na prática gravaram sem
+// interrupção real. Só afeta o nome publicado — nunca a pasta de destino (DestDateDir
+// sempre usa o horário cru, ver SPEC.md §6).
+func SnapToGrid(t time.Time, segmentSeconds, gridSnapSeconds int) time.Time {
+	boundary := nearestGridBoundary(t, segmentSeconds)
+	tolerance := time.Duration(gridSnapSeconds) * time.Second
+	if diff := t.Sub(boundary); diff <= tolerance && diff >= -tolerance {
+		return boundary
+	}
+	return t
+}
+
 // ComputeEnd calcula o horário de fim do bloco (SPEC.md §7.2 passo 5 / §7.3):
 //
 //	fim = inicio + round(duration)
 //	se |fim - borda_da_grade_mais_proxima| <= gridSnapSeconds: fim = borda_da_grade
 func ComputeEnd(start time.Time, durationSeconds float64, segmentSeconds, gridSnapSeconds int) time.Time {
 	end := start.Add(time.Duration(math.Round(durationSeconds)) * time.Second)
-
-	boundary := nearestGridBoundary(end, segmentSeconds)
-	tolerance := time.Duration(gridSnapSeconds) * time.Second
-	if diff := end.Sub(boundary); diff <= tolerance && diff >= -tolerance {
-		return boundary
-	}
-	return end
+	return SnapToGrid(end, segmentSeconds, gridSnapSeconds)
 }
 
 // FormatRange formata o nome do arquivo publicado: "HH.MM.SS-HH.MM.SS" (SPEC.md §1.1, §7.2).

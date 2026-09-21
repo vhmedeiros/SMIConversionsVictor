@@ -201,9 +201,13 @@ func (p *Publisher) processFile(tsPath string) {
 		return
 	}
 	end := ComputeEnd(start, realDur, p.segmentSeconds, p.gridSnapSeconds)
-	rangeName := FormatRange(start, end)
+	// Encosta o início na grade para o NOME do arquivo (evita o "buraco" cosmético de
+	// 1-2s do jitter de GOP do RTSP entre o fim de um arquivo e o início do próximo —
+	// ver SnapToGrid). A pasta de destino continua usando o horário cru (abaixo).
+	displayStart := SnapToGrid(start, p.segmentSeconds, p.gridSnapSeconds)
+	rangeName := FormatRange(displayStart, end)
 
-	// 6. DESTINO
+	// 6. DESTINO — sempre pelo horário de início CRU, nunca o ajustado (SPEC.md §6).
 	destDir := filepath.Join(p.outputDir, DestDateDir(start), p.channel)
 	if err := fsutil.MkdirAll(destDir); err != nil {
 		fail("mkdir_dest", err)
