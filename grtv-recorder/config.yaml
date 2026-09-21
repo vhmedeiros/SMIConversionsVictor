@@ -24,42 +24,53 @@ pre_create_day_folders: true  # cria pastas do dia às 00:00:05
 log_level: "info"             # debug | info | warn | error
 
 channels:
+  # av_sync_offset_seconds: correção do offset fixo entre áudio e vídeo medido em
+  # campo no BOV02 (áudio ~1.5s adiantado). Positivo atrasa o áudio. Ajuste por
+  # canal se algum ficar diferente dos outros — não é reencode, só timestamp.
   - name: "Record"
     label: "TV IMPERIAL - AF. TV RECORD - RR"
     url: "http://192.168.1.168/0.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "Globo"
     label: "TV RORAIMA - AF. GLOBO - RR"
     url: "http://192.168.1.168/2.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "TvAssembleia"
     label: "TV ASSEMBLEIA - RR"
     url: "http://192.168.1.168/4.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "Band"
     label: "TV BAND RORAIMA - RR"
     url: "http://192.168.1.168/6.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "Sbt"
     label: "TV NORTE / AF. SBT - RR"
     url: "http://192.168.1.168/14.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "TvCidade"
     label: "TV CIDADE - RR"
     url: "http://192.168.1.168/12.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "Cultura"
     label: "TV ATIVA RORAIMA"
     url: "http://192.168.1.168/10.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5
 
   - name: "TvTropical"
     label: "TV TROPICAL RR"
     url: "http://192.168.1.168/8.m3u8"
     enabled: true
+    av_sync_offset_seconds: 1.5

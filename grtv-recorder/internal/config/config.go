@@ -20,6 +20,14 @@ type Channel struct {
 	Label   string `yaml:"label"`
 	URL     string `yaml:"url"`
 	Enabled bool   `yaml:"enabled"`
+
+	// AVSyncOffsetSeconds corrige um offset fixo entre áudio e vídeo já presente na
+	// fonte (comum em encoders IP baratos). Positivo atrasa o áudio (use quando o
+	// áudio chega adiantado em relação ao vídeo, caso mais comum); negativo adianta o
+	// áudio. Aplicado só no remux via -itsoffset, sem decodificar/reencodar nenhum
+	// stream — não é deriva de clock (isso exigiria reencodar o áudio, o que o
+	// SPEC.md proíbe). Default 0 (sem correção).
+	AVSyncOffsetSeconds float64 `yaml:"av_sync_offset_seconds"`
 }
 
 // Config é o config.yaml completo (SPEC.md §9).

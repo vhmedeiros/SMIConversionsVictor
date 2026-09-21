@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -32,6 +33,7 @@ type Publisher struct {
 	tickSeconds          int
 	orphanTimeoutSeconds int
 	maxRetries           int
+	avSyncOffset         float64
 
 	logger   *logging.Logger
 	attempts map[string]int
@@ -39,6 +41,14 @@ type Publisher struct {
 
 // New cria o publisher de um canal a partir da config global.
 func New(cfg *config.Config, channelName string, logger *logging.Logger) *Publisher {
+	var avSyncOffset float64
+	for _, ch := range cfg.Channels {
+		if ch.Name == channelName {
+			avSyncOffset = ch.AVSyncOffsetSeconds
+			break
+		}
+	}
+
 	return &Publisher{
 		channel:              channelName,
 		workDir:              cfg.ChannelWorkDir(channelName),
@@ -51,6 +61,7 @@ func New(cfg *config.Config, channelName string, logger *logging.Logger) *Publis
 		tickSeconds:          cfg.PublishTickSeconds,
 		orphanTimeoutSeconds: cfg.OrphanTimeoutSeconds,
 		maxRetries:           cfg.MaxPublishRetries,
+		avSyncOffset:         avSyncOffset,
 		logger:               logger,
 		attempts:             make(map[string]int),
 	}
@@ -243,19 +254,46 @@ func (p *Publisher) processFile(tsPath string) {
 
 // remux converte .ts em .mp4 sem reencode (SPEC.md §7.2 passo 2).
 func (p *Publisher) remux(ctx context.Context, tsPath, mp4Path string) error {
-	cmd := exec.CommandContext(ctx, p.ffmpegPath,
-		"-nostdin", "-y", "-hide_banner", "-loglevel", "error",
-		"-i", tsPath,
-		"-map", "0:v:0", "-map", "0:a:0?",
-		"-c", "copy", "-movflags", "+faststart",
-		mp4Path,
-	)
+	cmd := exec.CommandContext(ctx, p.ffmpegPath, buildRemuxArgs(tsPath, mp4Path, p.avSyncOffset)...)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("ffmpeg remux: %w (stderr: %s)", err, strings.TrimSpace(stderr.String()))
 	}
 	return nil
+}
+
+// buildRemuxArgs monta os argumentos do remux .ts -> .mp4 (SPEC.md §7.2 passo 2).
+//
+// Com avSyncOffset == 0 (caso normal), lê o .ts uma vez, igual sempre foi.
+//
+// Com avSyncOffset != 0, lê o MESMO .ts local duas vezes: uma para o vídeo sem tocar
+// em nada, outra só para o áudio com -itsoffset aplicado — desloca o timestamp do
+// áudio no tempo sem decodificar nem reencodar um único frame (corrige um offset fixo
+// entre os streams já presente na fonte, medido em campo). Como é um arquivo local
+// (não a captura ao vivo), ler duas vezes é barato e não arrisca a gravação. Positivo
+// atrasa o áudio; negativo adianta. Continua 100% -c copy dos dois lados — não viola
+// a regra do SPEC.md de nunca reencodar áudio (§5.3, critério de aceite §13.5).
+func buildRemuxArgs(tsPath, mp4Path string, avSyncOffset float64) []string {
+	base := []string{"-nostdin", "-y", "-hide_banner", "-loglevel", "error"}
+
+	if avSyncOffset == 0 {
+		return append(base,
+			"-i", tsPath,
+			"-map", "0:v:0", "-map", "0:a:0?",
+			"-c", "copy", "-movflags", "+faststart",
+			mp4Path,
+		)
+	}
+
+	return append(base,
+		"-i", tsPath,
+		"-itsoffset", strconv.FormatFloat(avSyncOffset, 'f', 3, 64),
+		"-i", tsPath,
+		"-map", "0:v:0", "-map", "1:a:0?",
+		"-c", "copy", "-movflags", "+faststart",
+		mp4Path,
+	)
 }
 
 // thumbnail extrai o primeiro frame do .mp4 final (SPEC.md §7.2 passo 4).

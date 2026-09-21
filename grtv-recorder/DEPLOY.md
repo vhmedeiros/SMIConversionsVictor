@@ -157,3 +157,25 @@ Com o serviço já rodando de forma estável:
   menos 30 min sem interrupção.
 - **Uso de CPU**: com os 8 canais ativos, o conjunto deve ficar abaixo de ~15%
   numa máquina modesta (prova de que não há reencode em lugar nenhum).
+
+## 9. Calibrando a sincronia de áudio/vídeo
+
+Encoders IP baratos costumam entregar áudio e vídeo com um offset fixo entre si
+(medido em campo no BOV02: áudio ~1.5s adiantado). Cada canal tem
+`av_sync_offset_seconds` no `config.yaml`: valor positivo atrasa o áudio, negativo
+adianta. Isso é aplicado só no remux via `-itsoffset` — não decodifica nem reencoda
+nada, então não quebra a garantia de "mesmo codec da fonte".
+
+Para calibrar um canal:
+1. Deixe gravar alguns arquivos com um valor de teste (ex.: `1.5`).
+2. Abra um `.mp4` recente no VLC e veja se áudio/vídeo bateram.
+3. Se ainda estiver fora, ajuste o valor (aumente se o áudio ainda estiver
+   adiantado, diminua/zere se passou a estar atrasado) e reinicie o serviço
+   (`.\grtv-recorder.exe stop` / `start`) — o publisher só lê o valor no arranque.
+4. Repita até bater. Cada canal pode precisar de um valor diferente, já que cada um
+   vem de uma fonte/entrada distinta no encoder.
+
+Se a defasagem estiver **piorando ao longo do clipe** (não é o caso relatado até
+agora) em vez de constante, isso é deriva de clock e `av_sync_offset_seconds` não
+resolve — nesse caso a única correção real exige reencodar o áudio, o que contraria
+o SPEC.md (§5.3) e o critério de aceite §13.5. Não implementar sem decisão explícita.
