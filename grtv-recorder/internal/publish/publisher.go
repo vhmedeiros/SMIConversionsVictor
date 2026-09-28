@@ -192,8 +192,8 @@ func (p *Publisher) processFile(tsPath string) {
 		return
 	}
 
-	// 3. DURAÇÃO REAL
-	realDur, err := Duration(ctx, p.ffprobePath, mp4Path)
+	// 3. DURAÇÃO REAL — da trilha de vídeo, não do container (ver VideoDuration).
+	realDur, err := VideoDuration(ctx, p.ffprobePath, mp4Path)
 	if err != nil {
 		fail("probe_mp4", err)
 		return

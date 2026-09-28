@@ -21,21 +21,20 @@ Rodar como Administrador (PowerShell).
    powercfg /hibernate off
    ```
 3. **Decidir a letra de unidade** que vai guardar `work\` e `arquivos\stream\`.
-   O `config.yaml` de exemplo assume `G:\`, herdado do sistema legado (que lê o FTP
-   dali). Se esta máquina nova não tiver esse `G:\` (disco/mapeamento já pronto),
-   escolha outra unidade — **mas `work_dir` e `output_dir` precisam estar no MESMO
+   O `config.yaml` de exemplo assume `D:\`. Se esta máquina não tiver essa unidade
+   pronta, escolha outra — **mas `work_dir` e `output_dir` precisam estar no MESMO
    volume**, senão o `grtv-recorder` recusa subir (validação de config).
 4. **Criar as pastas** (ajuste a letra conforme o passo 3):
    ```powershell
    New-Item -ItemType Directory -Force C:\Sistema\bin
-   New-Item -ItemType Directory -Force G:\Sistema\ftp\work
-   New-Item -ItemType Directory -Force G:\Sistema\ftp\arquivos\stream
-   New-Item -ItemType Directory -Force G:\Sistema\ftp\logs
+   New-Item -ItemType Directory -Force D:\Sistema\ftp\work
+   New-Item -ItemType Directory -Force D:\Sistema\ftp\arquivos\stream
+   New-Item -ItemType Directory -Force D:\Sistema\ftp\logs
    ```
 5. **Excluir do antivírus** (Windows Defender) as pastas de I/O intenso:
    ```powershell
-   Add-MpPreference -ExclusionPath "G:\Sistema\ftp\work"
-   Add-MpPreference -ExclusionPath "G:\Sistema\ftp\arquivos"
+   Add-MpPreference -ExclusionPath "D:\Sistema\ftp\work"
+   Add-MpPreference -ExclusionPath "D:\Sistema\ftp\arquivos"
    ```
 
 ## 2. Instalar o ffmpeg
@@ -106,7 +105,7 @@ segmento em andamento deve ser fechado e publicado antes do processo sair.
 ### Conferir os arquivos publicados
 
 ```powershell
-& C:\Sistema\bin\ffprobe.exe -v error -show_entries stream=codec_type,codec_name -of default=noprint_wrappers=1 "G:\Sistema\ftp\arquivos\stream\<data>\<Canal>\<arquivo>.mp4"
+& C:\Sistema\bin\ffprobe.exe -v error -show_entries stream=codec_type,codec_name -of default=noprint_wrappers=1 "D:\Sistema\ftp\arquivos\stream\<data>\<Canal>\<arquivo>.mp4"
 ```
 
 Deve listar um stream de vídeo e um de áudio, com o **mesmo codec da fonte**
@@ -174,6 +173,15 @@ Para calibrar um canal:
    (`.\grtv-recorder.exe stop` / `start`) — o publisher só lê o valor no arranque.
 4. Repita até bater. Cada canal pode precisar de um valor diferente, já que cada um
    vem de uma fonte/entrada distinta no encoder.
+
+**Importante sobre como testar**: o `-itsoffset` grava o atraso como *edit list*
+(`elst`) dentro do `.mp4` — um metadado padrão do container, não uma alteração física
+nas amostras. VLC e ffmpeg respeitam esse metadado corretamente, mas nem todo
+player/pipeline respeita (alguns tocam as trilhas a partir da amostra 0, ignorando o
+`elst`, e aí a correção fica invisível mesmo com o arquivo "certo"). Se o destino
+final do `.mp4` não é o VLC (ex.: é reprocessado por outro sistema, ingerido por uma
+automação, tocado num player embarcado), **teste também nesse destino real** antes de
+considerar calibrado — bater no VLC não garante que bate em produção.
 
 Se a defasagem estiver **piorando ao longo do clipe** (não é o caso relatado até
 agora) em vez de constante, isso é deriva de clock e `av_sync_offset_seconds` não

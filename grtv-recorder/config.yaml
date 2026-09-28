@@ -1,9 +1,9 @@
 # Caminhos
 ffmpeg_path:  "C:\\Sistema\\bin\\ffmpeg.exe"
 ffprobe_path: "C:\\Sistema\\bin\\ffprobe.exe"
-work_dir:     "G:\\Sistema\\ftp\\work"
-output_dir:   "G:\\Sistema\\ftp\\arquivos\\stream"
-log_dir:      "G:\\Sistema\\ftp\\logs"
+work_dir:     "D:\\Sistema\\ftp\\work"
+output_dir:   "D:\\Sistema\\ftp\\arquivos\\stream"
+log_dir:      "D:\\Sistema\\ftp\\logs"
 
 # Segmentação
 segment_seconds: 240          # 4 minutos; deve dividir 3600

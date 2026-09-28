@@ -16,7 +16,7 @@ import (
 // BuildArgs monta os argumentos do ffmpeg para o canal, escolhendo o bloco de entrada
 // HLS ou RTSP conforme o esquema da URL (SPEC.md §5.1, §5.2, §5.3).
 // outputPattern é o caminho completo com o padrão -strftime, ex.:
-// "G:\Sistema\ftp\work\TvTropical\%Y-%m-%d_%H.%M.%S.ts".
+// "D:\Sistema\ftp\work\TvTropical\%Y-%m-%d_%H.%M.%S.ts".
 func BuildArgs(ch config.Channel, outputPattern string, segmentSeconds int) ([]string, error) {
 	u, err := url.Parse(ch.URL)
 	if err != nil {
