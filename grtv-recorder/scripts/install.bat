@@ -30,7 +30,7 @@ echo.
 echo Servico GRTVRecorder instalado.
 echo Antes de iniciar, confira:
 echo   - config.yaml ao lado do executavel, com os caminhos corretos;
-echo   - se G: e volume local, LocalSystem funciona; se for rede mapeada, configure
+echo   - se D: e volume local, LocalSystem funciona; se for rede mapeada, configure
 echo     "sc config GRTVRecorder obj= .\usuario password= senha" com caminho UNC (SPEC.md §10.3);
 echo   - powercfg /change standby-timeout-ac 0  e  powercfg /hibernate off (SPEC.md §10.4);
 echo   - antivirus excluindo work\ e arquivos\stream\ da verificacao em tempo real.
