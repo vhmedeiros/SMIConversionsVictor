@@ -26,13 +26,17 @@ log_level: "info"             # debug | info | warn | error
 channels:
   # av_sync_offset_seconds: correção do offset fixo entre áudio e vídeo. Positivo
   # atrasa o áudio, negativo adianta — não é reencode, só timestamp (DEPLOY.md §9).
-  # Histórico 28/09: 1.5 uniforme (campo BOV02) overcorrigiu todos os 8 canais;
-  # zerado, e daí testado por canal com sinal. Resultado desse teste com offset 0:
-  # Band e Cultura bateram (ficam 0); Record e Globo com áudio levemente atrasado
-  # (-0.3); Sbt e TvAssembleia mais atrasados (-0.8); TvCidade e TvTropical ainda
-  # não testados (sem sinal na hora), ficam 0 até serem calibrados. Cada canal tem
-  # offset próprio de verdade — não uniformizar de novo. Recalibrar por canal
-  # conforme necessário (ver §9).
+  # Histórico: 1.5 uniforme (campo BOV02, 28/09) overcorrigiu todos os 8 canais;
+  # zerado, testado por canal com sinal. Com offset 0: Band e Cultura bateram;
+  # Record e Globo levemente atrasados (-0.3); Sbt e TvAssembleia mais atrasados
+  # (-0.8). Teste do dia seguinte (29/09), com -0.3/-0.3/-0.8/-0.8 já aplicado:
+  # Record, Globo e TvAssembleia bateram, ficam como estão. Sbt ainda um pouco
+  # atrasado -> -1.0. Cultura, que tinha batido em 0, hoje com uma leve defasagem
+  # -> -0.3 (problema separado de falta de áudio na Cultura é do conversor/encoder,
+  # fora do alcance deste programa — av_sync_offset_seconds só desloca um áudio que
+  # já existe). TvCidade e TvTropical ainda não testados (sem sinal), ficam 0.
+  # Cada canal tem offset próprio de verdade — não uniformizar de novo. Recalibrar
+  # por canal conforme necessário (ver §9).
   - name: "Record"
     label: "TV IMPERIAL - AF. TV RECORD - RR"
     url: "http://192.168.1.168/0.m3u8"
@@ -61,7 +65,7 @@ channels:
     label: "TV NORTE / AF. SBT - RR"
     url: "http://192.168.1.168/14.m3u8"
     enabled: true
-    av_sync_offset_seconds: -0.8
+    av_sync_offset_seconds: -1.0
 
   - name: "TvCidade"
     label: "TV CIDADE - RR"
@@ -73,7 +77,7 @@ channels:
     label: "TV ATIVA RORAIMA"
     url: "http://192.168.1.168/10.m3u8"
     enabled: true
-    av_sync_offset_seconds: 0
+    av_sync_offset_seconds: -0.3
 
   - name: "TvTropical"
     label: "TV TROPICAL RR"
